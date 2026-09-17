@@ -310,7 +310,7 @@
 
     <section class="overlay" id="startOverlay">
       <div class="card">
-        <span class="mascot" aria-hidden="true">🐦</span>
+        <span class="mascot" aria-hidden="true">🦉</span>
         <h1>Math Flap</h1>
         <p>Solve the sum, then fly through the correct answer.</p>
         <button class="play-button" id="startButton">Start flapping</button>
@@ -373,7 +373,7 @@
       let successText = 0;
       let particles = [];
 
-      const bird = { x: 145, y: 390, vy: 0, radius: 18, rotation: 0 };
+      const bird = { x: 145, y: 390, vy: 0, radius: 18 };
       const gate = {
         x: 700, width: 82, topCenter: 265, bottomCenter: 545,
         gap: 118, answered: false, question: null, topAnswer: 3, bottomAnswer: 4
@@ -409,8 +409,8 @@
         const span = playBottom - playTop;
         gate.topCenter = playTop + span * 0.27;
         gate.bottomCenter = playTop + span * 0.73;
-        const maxGap = Math.max(78, span * 0.28);
-        gate.gap = Math.min(maxGap, Math.max(88, 124 - score * 0.8));
+        const maxGap = Math.max(126, span * 0.4);
+        gate.gap = Math.min(maxGap, Math.max(118, 176 - Math.min(score, 40) * 1.45));
       }
 
       function randomInt(min, max) {
@@ -483,7 +483,6 @@
         bird.x = W * 0.23;
         bird.y = H * 0.53;
         bird.vy = 0;
-        bird.rotation = 0;
         particles = [];
         screenFlash = 0;
         successText = 0;
@@ -506,7 +505,6 @@
       function flap() {
         if (state !== 'playing') return;
         bird.vy = -Math.max(335, Math.min(405, H * 0.47));
-        bird.rotation = -0.28;
         tone(560, 0.045, 0.035, 'sine');
       }
 
@@ -558,7 +556,7 @@
           overMessage.textContent = `${gate.question.text} = ${gate.question.answer}, not ${chosen}.`;
         } else {
           overTitle.textContent = score === 0 ? 'Give it another flap!' : 'So close!';
-          overMessage.textContent = score > 0 ? `You solved ${score} ${score === 1 ? 'sum' : 'sums'}. Beat it on the next run.` : 'Keep the bird between the pipes.';
+          overMessage.textContent = score > 0 ? `You solved ${score} ${score === 1 ? 'sum' : 'sums'}. Beat it on the next run.` : 'Keep the owl between the pipes.';
         }
         liveStatus.textContent = `${overTitle.textContent} Score ${score}. Best ${best}.`;
         setTimeout(() => { gameOverOverlay.hidden = false; restartButton.focus(); }, 280);
@@ -590,7 +588,6 @@
 
         if (state === 'ready') {
           bird.y = H * 0.53 + Math.sin(performance.now() / 380) * 10;
-          bird.rotation = Math.sin(performance.now() / 450) * 0.08;
           return;
         }
         if (state !== 'playing') return;
@@ -598,7 +595,6 @@
         const gravity = Math.max(920, H * 1.28);
         bird.vy += gravity * dt;
         bird.y += bird.vy * dt;
-        bird.rotation = Math.min(1.18, bird.rotation + 2.2 * dt);
 
         const speed = Math.min(245, 145 + score * 4.2);
         gate.x -= speed * dt;
@@ -713,14 +709,13 @@
       function drawBird() {
         ctx.save();
         ctx.translate(bird.x, bird.y);
-        ctx.rotate(bird.rotation);
         ctx.font = `${bird.radius * 2.45}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.shadowColor = 'rgba(7,26,61,.28)';
         ctx.shadowBlur = 0;
         ctx.shadowOffsetY = 5;
-        ctx.fillText('🐦', 0, 0);
+        ctx.fillText('🦉', 0, 0);
         ctx.restore();
       }
 
