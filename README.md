@@ -96,6 +96,33 @@ The leaderboard records each player's best score for the current UTC day. Ties f
 
 ## Deployment
 
+### Standalone Cloudflare Workers test deployment
+
+This is separate from the existing ChatGPT Sites deployment and starts with an
+empty leaderboard. The Cloudflare D1 database is `math-flap-test` and its ID is
+recorded in `wrangler.jsonc`. Keep the binding name `DB` and the Worker name
+`math-flap`.
+
+Apply the checked-in schema to that database once, before testers use the game:
+
+```bash
+node ./node_modules/wrangler/bin/wrangler.js d1 execute math-flap-test --remote --config wrangler.jsonc --file drizzle/0000_cool_sally_floyd.sql
+```
+
+For Cloudflare's GitHub import, select this repository and the `main` branch,
+then use `pnpm run build:cloudflare` as the build command and
+`pnpm run deploy:cloudflare` as the deploy command. The project root is `/`.
+Set the build variable `PNPM_VERSION` to `11.25.0` so Cloudflare uses the
+lockfile's package manager version. Cloudflare's Worker project name must be
+`math-flap`. The resulting
+`workers.dev` URL is public to anyone with the link.
+
+For local verification, run `pnpm run build:cloudflare` and `pnpm lint`.
+The standalone Cloudflare build uses `vite.cloudflare.config.ts`; the existing
+`pnpm build` and `.openai/hosting.json` remain the Sites path.
+
+### Existing ChatGPT Sites deployment
+
 This checkout is linked to the existing Sites project through `.openai/hosting.json`:
 
 ```json

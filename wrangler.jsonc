@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "math-flap",
+  "main": "vinext/server/fetch-handler",
+  "compatibility_date": "2026-09-17",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "math-flap-test",
+      "database_id": "878047aa-947d-4f86-ba30-bd3220df82dc"
+    }
+  ]
+}
