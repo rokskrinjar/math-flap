@@ -1009,11 +1009,11 @@
                 (sourceX - pivotX) * scale, -pivotY * scale, sourceWidth * scale, height);
               ctx.restore();
             };
-            // Draw the wings behind the owl's body so their hinges stay hidden.
-            drawWing(0, 166, 154, 62, angle);
-            drawWing(230, 90, 239, 62, -angle);
-            ctx.drawImage(owlSprite, 136, 0, 124, owlSprite.naturalHeight,
-              (136 - owlSprite.naturalWidth / 2) * scale, -height / 2, 124 * scale, height);
+            // Keep the head and ear tufts in the stationary body crop.
+            drawWing(0, 150, 145, 62, angle);
+            drawWing(280, 40, 282, 70, -angle);
+            ctx.drawImage(owlSprite, 140, 0, 146, owlSprite.naturalHeight,
+              (140 - owlSprite.naturalWidth / 2) * scale, -height / 2, 146 * scale, height);
           } else {
             ctx.drawImage(owlSprite, -width / 2, -height / 2, width, height);
           }
