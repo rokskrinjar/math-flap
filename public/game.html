@@ -998,9 +998,14 @@
           const width = bird.radius * 4.6;
           const height = width * owlSprite.naturalHeight / owlSprite.naturalWidth;
           const flapAge = performance.now() - wingFlapStartedAt;
-          if (flapAge < 320) {
+          if (flapAge < 400) {
             const scale = width / owlSprite.naturalWidth;
-            const angle = Math.sin(flapAge / 320 * Math.PI * 2) * 0.18;
+            const flap = flapAge / 400;
+            const poses = [0, 0.2, -0.13, 0.16, 0];
+            const phase = Math.min(3, Math.floor(flap * 4));
+            const progress = flap * 4 - phase;
+            const eased = progress * progress * (3 - 2 * progress);
+            const angle = poses[phase] + (poses[phase + 1] - poses[phase]) * eased;
             const drawWing = (sourceX, sourceWidth, pivotX, pivotY, rotation) => {
               ctx.save();
               ctx.translate((pivotX - owlSprite.naturalWidth / 2) * scale, (pivotY - owlSprite.naturalHeight / 2) * scale);
