@@ -1,126 +1,115 @@
-# vinext-starter
+# Math Flap
 
-A clean full-stack starter running on [vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and Drizzle support.
+Math Flap is a one-tap browser game that combines Flappy Bird-style navigation with quick arithmetic. The player guides a flying owl through the corridor containing the correct answer. After each run, the game shows a daily top-10 leaderboard.
 
-## Prerequisites
+Production: https://math-flap.rok-skrinjar.chatgpt.site
 
-- Node.js `>=22.13.0`
-- Portable: Windows, macOS, or Linux; no Bash required
-- Managed Linux: managed Linux runtime with Bash, `flock`, `curl`, `sha256sum`, and GNU `timeout`
-- Git is required only for publishing
+> The production Site is currently owner-only. Making it public is a separate access-control change.
 
-## Sites Lifecycle
+## Current product
 
-The Sites initializer copies the shared starter and selects managed-linux only when `SITES_MANAGED_LINUX_CONTAINER=1`; otherwise it selects portable. It saves the selection only in ignored `.sites-runtime/execution-profile.json`. Both profiles copy/configure first, then use the plugin's separate `install-dependencies.mjs` step to measure installation independently. Edit source under `app/` and follow the Sites skill for installation, preview, builds, and publishing.
+- Responsive browser game for desktop and mobile
+- Addition, subtraction, and multiplication with progressive difficulty
+- Wider early gaps that narrow as the score increases
+- Increasing horizontal speed with a capped maximum
+- Automatically generated anonymous nicknames
+- Persistent identity through an HttpOnly cookie; no player login
+- Daily top-10 leaderboard, reset at midnight UTC
+- Basic server-side score plausibility checks
+- Cloudflare D1 persistence through ChatGPT Sites
 
-Whenever reopening or moving a checkout, run `node <plugin-root>/scripts/configure-execution-profile.mjs` before project commands. Profile changes do not alter tracked source or require reinstalling otherwise-valid dependencies; restart an existing preview to use the new selection. Do not commit or upload `.sites-runtime/`.
+## Technology
 
-This starter does not use `wrangler.jsonc`.
+- TypeScript, React 19, Next.js-compatible routing via Vinext
+- Vite and Cloudflare Workers
+- Cloudflare D1 with Drizzle ORM
+- pnpm 11 and Node.js 22.13+
+- ChatGPT Sites for Git-backed hosting and deployment
 
-`install:ci` runs `npm ci` once against the shared lockfile, disables parent-workspace discovery, and includes required dev/optional dependencies despite production/omit settings. Sharp defaults to prebuilt binaries unless explicitly configured otherwise. Do not overlap installers.
+## Repository layout
 
-- **Portable:** Preserve host HOME, npm cache, registry, proxy, temporary paths, retry/concurrency settings, and lifecycle-script policy. Use `--prefer-offline --no-audit --no-fund`.
-- **Managed Linux:** Use the existing project-local HOME/cache/tmp setup and Linux install lock, tarball preflight, and timeout. Restore the image-seeded npm cache only when its lockfile hash matches; retain network fallback. Builds keep their existing timeout. These helpers are not invoked by the portable profile.
+| Path | Purpose |
+| --- | --- |
+| `public/game.html` | Main game, rendering, physics, arithmetic, UI, and client API calls |
+| `public/math-owl.png` | Owl game sprite |
+| `app/page.tsx` | Full-screen shell that loads the game |
+| `app/api/player/route.ts` | Creates or restores an anonymous player |
+| `app/api/run/route.ts` | Starts a server-tracked game run |
+| `app/api/score/route.ts` | Validates and saves a completed run |
+| `app/api/leaderboard/route.ts` | Returns the current daily leaderboard |
+| `db/schema.ts` | Drizzle schema for players and runs |
+| `db/leaderboard.ts` | Nickname, cookie, and leaderboard logic |
+| `drizzle/` | D1 database migrations |
+| `.openai/hosting.json` | Sites project and D1 binding configuration |
+| `AGENTS.md` | Working instructions automatically read by Codex |
+| `docs/ARCHITECTURE.md` | Runtime flow and important implementation details |
+| `docs/MOVE_TO_CODEX.md` | Exact handoff steps for a local or GitHub-backed Codex project |
 
-`scripts/sites-env.mjs` preserves the caller's HOME, npm cache, proxy, XDG, and temporary-directory configuration while defaulting Wrangler and Miniflare state to the checkout. If npm reports an unwritable cache, select a writable path with `npm_config_cache` for that install. The `dev` and `start` scripts also keep Wrangler logs inside the checkout. Generated `.sites-runtime/` and `.wrangler/` directories are disposable and ignored by Git.
+## Local setup
 
-On portable, `npm run dev` uses `vinext dev` with HMR, starting at port 5173. Vinext records the running server in ignored `.vinext/` state, rejects an ordinary duplicate launch, and recovers stale state after a stopped process; exactly simultaneous starts can race. Pass `--port <port>` or `--hostname <host>` after `npm run dev --` when needed; keep portable previews on loopback.
+Prerequisites:
 
-For browser QA on managed Linux, use `sites-preview start`. The project's dev script runs Vite and accepts the supervisor's `--host 0.0.0.0 --port 4173 --strictPort` arguments. The internal browser uses `http://terminal.local:4173/`; it is not a user-facing URL. The supervisor owns the preview lifecycle. The ignored local profile survives the supervisor's cleared process environment.
+- Node.js 22.13 or newer
+- pnpm 11.25 or newer
+- Git
 
-The portable profile simulates ChatGPT sign-in only for loopback development requests. Visit `/signin-with-chatgpt?return_to=/` to sign in as `local_seedy` (`seedy@sites.test`, display name `Seedy`) and `/signout-with-chatgpt?return_to=/` to sign out. The development cookie preserves that identity across server restarts. Mock auth is disabled in the managed-linux profile and is not included in production builds; hosted authentication remains dispatch-owned.
+Install and build:
 
-The Worker uses `vinext/server/fetch-handler`, including Vinext's config-aware image handling. After building, `npm start` runs that Worker locally through Wrangler on `127.0.0.1`, sharing `.wrangler/state` with dev preview and local D1 migrations; it does not deploy the site or simulate sign-in. Use the URL printed by the server. Pass `npm start -- --port <port>` to select a different built-preview port.
+```bash
+pnpm install --frozen-lockfile
+pnpm build
+```
 
-Local previews use Miniflare's placeholder `Request.cf` metadata without a network lookup. Set `CLOUDFLARE_CF_FETCH_ENABLED=true` to opt into fetching preview metadata; this setting does not change hosted request metadata.
+Start the development server:
 
-Local tool usage metrics are disabled by default. Set `WRANGLER_SEND_METRICS=true` to opt in.
+```bash
+pnpm dev
+```
 
-## Included Shape
+The frontend can load without production data, but the leaderboard requires a local D1 database. Build first, then apply the migration:
 
-- edit site code under `app/`
-- `app/chatgpt-auth.ts` provides optional dispatch-owned ChatGPT sign-in helpers
-- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
-- `vite.config.ts` simulates declared bindings for local development
-- `db/index.ts` reads the D1 binding from the Cloudflare Worker environment
-- `db/schema.ts` starts intentionally empty
-- `@cloudflare/workers-types` provides Worker types; `cloudflare-env.d.ts` declares optional `DB`/`BUCKET` bindings—update these declarations if binding names change
-- `examples/d1/` contains an optional D1 example surface
-- `drizzle.config.ts` supports local migration generation when needed
+```bash
+node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_cool_sally_floyd.sql
+```
 
-## Workspace Auth Headers
+To preview the built Worker with the local D1 state:
 
-Signed-in visitors receive both `oai-authenticated-user-id` and `oai-authenticated-user-email`. Private Sites require every visitor to sign in; public Sites may also have anonymous visitors, for whom neither header is present.
+```bash
+pnpm start
+```
 
-The user ID is stable for the same user on the same Site and different across Sites. Use it as the durable user key; use email and name for display or contact purposes.
+## Useful commands
 
-SIWC-authenticated workspace sites may also receive `oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty `name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by `oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
+```bash
+pnpm dev          # development server
+pnpm build        # production build
+pnpm start        # local Cloudflare Worker preview
+pnpm lint         # lint the project
+pnpm db:generate  # generate a migration after schema changes
+```
 
-Treat the full name as optional and fall back to email when it is absent:
+## Anonymous identity and leaderboard
 
-```tsx
-import { headers } from "next/headers";
+The server assigns a nickname such as `CleverOtter42` on first use. A random token is stored in the browser as an HttpOnly, SameSite=Lax cookie; only its SHA-256 hash is stored in D1. Clearing cookies or using another browser creates a new anonymous player.
 
-export default async function Home() {
-  const requestHeaders = await headers();
-  const userId = requestHeaders.get("oai-authenticated-user-id");
-  const email = requestHeaders.get("oai-authenticated-user-email");
-  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
-  const fullName =
-    encodedFullName &&
-    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
-      "percent-encoded-utf-8"
-      ? decodeURIComponent(encodedFullName)
-      : null;
+The leaderboard records each player's best score for the current UTC day. Ties favor the score achieved earlier. A submitted score must belong to an active server-created run and pass basic elapsed-time checks.
 
-  const displayName = fullName ?? email;
-  // ...
+## Deployment
+
+This checkout is linked to the existing Sites project through `.openai/hosting.json`:
+
+```json
+{
+  "project_id": "appgprj_6aabc04fbf94819194c3f9a72222b493",
+  "d1": "DB",
+  "r2": null
 }
 ```
 
-## Optional Dispatch-Owned ChatGPT Sign-In
+Keep that file when moving the project if the intention is to continue updating the same hosted game. Publishing requires authenticated Sites tooling; a normal `git push` to an unrelated GitHub repository does not update the live Site.
 
-Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs optional or required ChatGPT sign-in:
+See `docs/MOVE_TO_CODEX.md` for the recommended handoff procedure.
 
-- Use `getChatGPTUser()` for optional signed-in UI.
-- Use the returned `userId` as the stable user key for user-owned records; do not use email as a durable identifier.
-- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send anonymous visitors through Sign in with ChatGPT.
-- In a Server Component, start sign-in with `<a href={chatGPTSignInPath(returnTo)} target="_top">`. The auth helper module is server-only; do not import it into a Client Component.
-- Do not use `fetch`, XHR, a client-side router, or a framework link that can prefetch the sign-in route. SIWC must start as a top-level navigation.
-- Never request the AuthAPI authorization endpoint directly. The dispatch-owned `/signin-with-chatgpt` route must start the SIWC flow.
-- Use `chatGPTSignOutPath(returnTo)` for browser sign-out links or actions.
-- Pass a same-origin relative `returnTo` path for the destination after sign-in or sign-out. The helper validates and safely encodes it.
-- Mark protected pages with `export const dynamic = "force-dynamic"` because they depend on per-request identity headers.
+## Product status
 
-Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the OAuth cookies, and identity header injection. Do not implement app routes for those reserved paths. Routes that do not import and call the helper remain anonymous-compatible.
-
-SIWC establishes identity only; it does not prove workspace membership. Use the Sites hosting platform's access policy controls for workspace-wide restrictions, or enforce explicit server-side membership or allowlist checks.
-
-Use SIWC for account pages, user-specific dashboards, saved records, and write actions tied to the current ChatGPT user. Leave public content anonymous.
-
-## Local D1 migrations
-
-For a D1-backed local preview, generate SQL with `npm run db:generate`. Build once through the Sites skill's build entrypoint (or `npm run build` for standalone use) to generate `dist/server/wrangler.json`, rebuilding if bindings change. From the project root, apply each pending migration in order:
-
-```sh
-node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_example.sql
-```
-
-Replace the filename with the pending migration and `DB` with your D1 binding name if different. Use `.wrangler/state`, not `.wrangler/state/v3`; Wrangler adds the versioned directories. Do not replay migrations already applied locally. This updates only the preview database; publishing applies production migrations separately.
-
-## Diagnostic Commands
-
-- `npm run install:ci`: perform the one locked dependency install
-- `npm run dev`: start the Vite/Vinext development server
-- `npm run build`: build the deployable Sites artifact
-- `npm run start`: preview the built Worker locally with D1/R2 support
-- `npm run db:generate`: generate Drizzle migrations after schema changes
-
-When using the Sites plugin, follow its skill instructions for installation, builds, and publishing. These npm commands remain available for standalone use.
-
-The portable build runs Vinext directly without a host `timeout` command. The managed-linux build uses `scripts/build-verified.sh` and its existing `SITES_BUILD_TIMEOUT` setting.
-
-## Learn More
-
-- [vinext Documentation](https://github.com/cloudflare/vinext)
-- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)
+The core game, anonymous identity, score submission, and daily leaderboard are working. Sensible next tasks include public launch, real-user playtesting, sound controls, analytics, accessibility improvements, and stronger anti-cheat checks. These are future enhancements, not prerequisites for running the current game.
