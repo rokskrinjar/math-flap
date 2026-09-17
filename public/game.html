@@ -161,6 +161,7 @@
       display: grid;
       place-items: center;
       padding: 22px;
+      overflow-y: auto;
       background: rgba(7,26,61,.18);
       backdrop-filter: blur(2px);
     }
@@ -234,6 +235,137 @@
       opacity: .55;
     }
 
+    .game-over-card {
+      width: min(100%, 540px);
+      padding: clamp(20px, 4vw, 30px);
+    }
+
+    .game-over-card > .mascot {
+      margin: 0;
+      font-size: clamp(2.5rem, 8vw, 4rem);
+    }
+
+    .game-over-card > h1 {
+      font-size: clamp(2rem, 7vw, 3.2rem);
+    }
+
+    .game-over-card > p {
+      margin-bottom: 14px;
+    }
+
+    .game-over-grid {
+      display: grid;
+      grid-template-columns: minmax(110px, .8fr) minmax(220px, 1.45fr);
+      gap: 16px;
+      align-items: stretch;
+      margin-bottom: 18px;
+    }
+
+    .game-over-card .result {
+      flex-direction: column;
+      gap: 9px;
+      margin: 0;
+    }
+
+    .game-over-card .result div {
+      min-width: 0;
+      padding: 10px;
+      font-size: 1.55rem;
+    }
+
+    .leaderboard {
+      min-height: 250px;
+      overflow: hidden;
+      border: 2px solid var(--ink);
+      border-radius: 17px;
+      background: #fff;
+      text-align: left;
+    }
+
+    .leaderboard-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-bottom: 2px solid var(--ink);
+      background: var(--yellow);
+    }
+
+    .leaderboard-header strong {
+      font-size: .86rem;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .leaderboard-header span {
+      font-size: .65rem;
+      font-weight: 900;
+      opacity: .6;
+      white-space: nowrap;
+    }
+
+    .leaderboard-list {
+      list-style: none;
+      margin: 0;
+      padding: 5px 0;
+    }
+
+    .leaderboard-row {
+      display: grid;
+      grid-template-columns: 26px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 7px;
+      min-height: 23px;
+      padding: 2px 10px;
+      font-size: .76rem;
+      font-weight: 900;
+    }
+
+    .leaderboard-row.is-you {
+      background: #dceaff;
+      color: #064fc4;
+    }
+
+    .leaderboard-rank {
+      width: 21px;
+      height: 21px;
+      display: grid;
+      place-items: center;
+      border: 1.5px solid currentColor;
+      border-radius: 50%;
+      font-size: .67rem;
+    }
+
+    .rank-1 { background: #ffd44d; }
+    .rank-2 { background: #dce3ea; }
+    .rank-3 { background: #efb98a; }
+
+    .leaderboard-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .leaderboard-score { font-variant-numeric: tabular-nums; }
+
+    .leaderboard-status {
+      padding: 30px 16px;
+      color: #486078;
+      font-size: .8rem;
+      font-weight: 800;
+      line-height: 1.4;
+      text-align: center;
+    }
+
+    .player-name {
+      display: block;
+      margin: 7px 0 1px;
+      color: #486078;
+      font-size: .72rem;
+      font-weight: 900;
+    }
+
     .play-button {
       width: 100%;
       min-height: 58px;
@@ -292,6 +424,17 @@
       .mascot { font-size: 3.2rem; }
       h1 { font-size: 2.5rem; }
       .card p { margin: 8px auto 15px; }
+      .game-over-card { padding: 14px 18px; }
+      .game-over-card > .mascot { display: none; }
+      .game-over-card > h1 { margin-top: 0; font-size: 2rem; }
+      .leaderboard-row { min-height: 20px; padding-block: 0; }
+      .leaderboard { min-height: 225px; }
+    }
+
+    @media (max-width: 430px) {
+      .game-over-grid { grid-template-columns: 96px minmax(0, 1fr); gap: 10px; }
+      .leaderboard-row { padding-inline: 7px; font-size: .71rem; }
+      .leaderboard-header { padding-inline: 9px; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -316,7 +459,7 @@
 
     <section class="overlay" id="startOverlay">
       <div class="card">
-        <img class="mascot mascot-img" src="assets/math-owl.png" alt="">
+        <img class="mascot mascot-img" src="math-owl.png" alt="">
         <h1>Math Flap</h1>
         <p>Solve the sum, then fly through the correct answer.</p>
         <button class="play-button" id="startButton">Start flapping</button>
@@ -324,13 +467,25 @@
     </section>
 
     <section class="overlay" id="gameOverOverlay" hidden>
-      <div class="card">
+      <div class="card game-over-card">
         <span class="mascot" aria-hidden="true">💫</span>
         <h1 id="overTitle">So close!</h1>
         <p id="overMessage">One more try?</p>
-        <div class="result">
-          <div><small>Score</small><span id="finalScore">0</span></div>
-          <div><small>Best</small><span id="bestScore">0</span></div>
+        <div class="game-over-grid">
+          <div class="result">
+            <div><small>Score</small><span id="finalScore">0</span></div>
+            <div><small>Best</small><span id="bestScore">0</span></div>
+            <span class="player-name" id="playerName">Assigning your name…</span>
+          </div>
+          <section class="leaderboard" aria-labelledby="leaderboardTitle">
+            <div class="leaderboard-header">
+              <strong id="leaderboardTitle">Daily top 10</strong>
+              <span id="leaderboardReset">UTC</span>
+            </div>
+            <ol class="leaderboard-list" id="leaderboardList">
+              <li class="leaderboard-status">Loading today’s scores…</li>
+            </ol>
+          </section>
         </div>
         <button class="play-button" id="restartButton">Try again</button>
       </div>
@@ -359,6 +514,9 @@
       const overMessage = document.getElementById('overMessage');
       const liveStatus = document.getElementById('liveStatus');
       const soundButton = document.getElementById('soundButton');
+      const playerNameEl = document.getElementById('playerName');
+      const leaderboardList = document.getElementById('leaderboardList');
+      const leaderboardReset = document.getElementById('leaderboardReset');
 
       const COLORS = {
         ink: '#071a3d', skyTop: '#4fd2ff', skyBottom: '#148cff',
@@ -367,7 +525,7 @@
       };
 
       const owlSprite = new Image();
-      owlSprite.src = 'assets/math-owl.png';
+      owlSprite.src = 'math-owl.png';
 
       let W = 640;
       let H = 820;
@@ -381,6 +539,9 @@
       let screenFlash = 0;
       let successText = 0;
       let particles = [];
+      let playerNickname = '';
+      let playerReady = null;
+      let activeRunPromise = null;
 
       const bird = { x: 145, y: 390, vy: 0, radius: 18 };
       const gate = {
@@ -503,6 +664,7 @@
       function startGame() {
         ensureAudio();
         resetGame();
+        activeRunPromise = startRun();
         state = 'playing';
         startOverlay.hidden = true;
         gameOverOverlay.hidden = true;
@@ -569,6 +731,114 @@
         }
         liveStatus.textContent = `${overTitle.textContent} Score ${score}. Best ${best}.`;
         setTimeout(() => { gameOverOverlay.hidden = false; restartButton.focus(); }, 280);
+        const finishedRun = activeRunPromise;
+        showLeaderboardStatus('Saving your score…');
+        void submitScore(score, finishedRun);
+      }
+
+      async function initializePlayer() {
+        try {
+          const response = await fetch('/api/player', { method: 'POST' });
+          if (!response.ok) throw new Error('Player initialization failed');
+          const data = await response.json();
+          playerNickname = data.nickname;
+          playerNameEl.textContent = `You are ${playerNickname}`;
+          return playerNickname;
+        } catch (_) {
+          playerNameEl.textContent = 'Anonymous player';
+          return null;
+        }
+      }
+
+      async function startRun() {
+        try {
+          await playerReady;
+          const response = await fetch('/api/run', { method: 'POST' });
+          if (!response.ok) throw new Error('Run initialization failed');
+          const data = await response.json();
+          if (data.nickname) {
+            playerNickname = data.nickname;
+            playerNameEl.textContent = `You are ${playerNickname}`;
+          }
+          return data.runId;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function showLeaderboardStatus(message) {
+        const item = document.createElement('li');
+        item.className = 'leaderboard-status';
+        item.textContent = message;
+        leaderboardList.replaceChildren(item);
+      }
+
+      function resetCountdown(resetsAt) {
+        const milliseconds = Math.max(0, Number(resetsAt) - Date.now());
+        const hours = Math.floor(milliseconds / 3_600_000);
+        const minutes = Math.floor((milliseconds % 3_600_000) / 60_000);
+        return `Resets in ${hours}h ${String(minutes).padStart(2, '0')}m`;
+      }
+
+      function makeLeaderboardRow(entry) {
+        const row = document.createElement('li');
+        row.className = `leaderboard-row${entry.isYou ? ' is-you' : ''}`;
+
+        const rank = document.createElement('span');
+        rank.className = `leaderboard-rank rank-${entry.rank}`;
+        rank.textContent = String(entry.rank);
+
+        const name = document.createElement('span');
+        name.className = 'leaderboard-name';
+        name.textContent = entry.isYou ? `${entry.nickname} · YOU` : entry.nickname;
+
+        const points = document.createElement('span');
+        points.className = 'leaderboard-score';
+        points.textContent = String(entry.score);
+
+        row.append(rank, name, points);
+        return row;
+      }
+
+      function renderLeaderboard(data) {
+        if (data.nickname) {
+          playerNickname = data.nickname;
+          playerNameEl.textContent = `You are ${playerNickname}`;
+        }
+        leaderboardReset.textContent = resetCountdown(data.resetsAt);
+        const rows = Array.isArray(data.entries) ? [...data.entries] : [];
+        if (data.you && !rows.some((entry) => entry.isYou)) rows.push(data.you);
+        if (!rows.length) {
+          showLeaderboardStatus('Be the first player on today’s board!');
+          return;
+        }
+        leaderboardList.replaceChildren(...rows.map(makeLeaderboardRow));
+      }
+
+      async function loadLeaderboard() {
+        const response = await fetch('/api/leaderboard');
+        if (!response.ok) throw new Error('Leaderboard load failed');
+        return response.json();
+      }
+
+      async function submitScore(finalScore, runPromise) {
+        try {
+          const runId = await runPromise;
+          if (!runId) throw new Error('Run was not registered');
+          const response = await fetch('/api/score', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ runId, score: finalScore }),
+          });
+          if (!response.ok) throw new Error('Score submission failed');
+          renderLeaderboard(await response.json());
+        } catch (_) {
+          try {
+            renderLeaderboard(await loadLeaderboard());
+          } catch (_) {
+            showLeaderboardStatus('Leaderboard temporarily unavailable. Try again after your next run.');
+          }
+        }
       }
 
       function burst(x, y) {
@@ -854,6 +1124,7 @@
       resize();
       resetGame();
       state = 'ready';
+      playerReady = initializePlayer();
       registerAgentTools();
       requestAnimationFrame((time) => { lastTime = time; requestAnimationFrame(loop); });
     })();
