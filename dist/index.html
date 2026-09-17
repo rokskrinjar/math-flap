@@ -186,6 +186,12 @@
       filter: drop-shadow(0 5px 0 rgba(7,26,61,.18));
     }
 
+    .mascot-img {
+      width: min(78%, 240px);
+      height: auto;
+      margin: 0 auto 8px;
+    }
+
     h1 {
       margin: 8px 0 8px;
       font-size: clamp(2.25rem, 10vw, 4rem);
@@ -310,7 +316,7 @@
 
     <section class="overlay" id="startOverlay">
       <div class="card">
-        <span class="mascot" aria-hidden="true">🦉</span>
+        <img class="mascot mascot-img" src="assets/math-owl.png" alt="">
         <h1>Math Flap</h1>
         <p>Solve the sum, then fly through the correct answer.</p>
         <button class="play-button" id="startButton">Start flapping</button>
@@ -359,6 +365,9 @@
         pipe: '#125cff', pipeLight: '#4c9bff', yellow: '#ffd44d',
         cream: '#fff9e7', white: '#ffffff', red: '#ff4f64', green: '#20d39a'
       };
+
+      const owlSprite = new Image();
+      owlSprite.src = 'assets/math-owl.png';
 
       let W = 640;
       let H = 820;
@@ -709,13 +718,19 @@
       function drawBird() {
         ctx.save();
         ctx.translate(bird.x, bird.y);
-        ctx.font = `${bird.radius * 2.45}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
         ctx.shadowColor = 'rgba(7,26,61,.28)';
-        ctx.shadowBlur = 0;
-        ctx.shadowOffsetY = 5;
-        ctx.fillText('🦉', 0, 0);
+        ctx.shadowBlur = 2;
+        ctx.shadowOffsetY = 4;
+        if (owlSprite.complete && owlSprite.naturalWidth) {
+          const width = bird.radius * 4.6;
+          const height = width * owlSprite.naturalHeight / owlSprite.naturalWidth;
+          ctx.drawImage(owlSprite, -width / 2, -height / 2, width, height);
+        } else {
+          ctx.font = `${bird.radius * 2.45}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('🦉', 0, 0);
+        }
         ctx.restore();
       }
 
