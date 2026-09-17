@@ -538,6 +538,7 @@
       let audioContext = null;
       let screenFlash = 0;
       let successText = 0;
+      let wingFlapStartedAt = -Infinity;
       let particles = [];
       let playerNickname = '';
       let playerReady = null;
@@ -653,6 +654,7 @@
         bird.x = W * 0.23;
         bird.y = H * 0.53;
         bird.vy = 0;
+        wingFlapStartedAt = -Infinity;
         particles = [];
         screenFlash = 0;
         successText = 0;
@@ -676,6 +678,7 @@
       function flap() {
         if (state !== 'playing') return;
         bird.vy = -Math.max(335, Math.min(405, H * 0.47));
+        wingFlapStartedAt = performance.now();
         tone(560, 0.045, 0.035, 'sine');
       }
 
@@ -994,7 +997,26 @@
         if (owlSprite.complete && owlSprite.naturalWidth) {
           const width = bird.radius * 4.6;
           const height = width * owlSprite.naturalHeight / owlSprite.naturalWidth;
-          ctx.drawImage(owlSprite, -width / 2, -height / 2, width, height);
+          const flapAge = performance.now() - wingFlapStartedAt;
+          if (flapAge < 320) {
+            const scale = width / owlSprite.naturalWidth;
+            const angle = Math.sin(flapAge / 320 * Math.PI * 2) * 0.18;
+            const drawWing = (sourceX, sourceWidth, pivotX, pivotY, rotation) => {
+              ctx.save();
+              ctx.translate((pivotX - owlSprite.naturalWidth / 2) * scale, (pivotY - owlSprite.naturalHeight / 2) * scale);
+              ctx.rotate(rotation);
+              ctx.drawImage(owlSprite, sourceX, 0, sourceWidth, owlSprite.naturalHeight,
+                (sourceX - pivotX) * scale, -pivotY * scale, sourceWidth * scale, height);
+              ctx.restore();
+            };
+            // Draw the wings behind the owl's body so their hinges stay hidden.
+            drawWing(0, 166, 154, 62, angle);
+            drawWing(230, 90, 239, 62, -angle);
+            ctx.drawImage(owlSprite, 136, 0, 124, owlSprite.naturalHeight,
+              (136 - owlSprite.naturalWidth / 2) * scale, -height / 2, 124 * scale, height);
+          } else {
+            ctx.drawImage(owlSprite, -width / 2, -height / 2, width, height);
+          }
         } else {
           ctx.font = `${bird.radius * 2.45}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
           ctx.textAlign = 'center';
