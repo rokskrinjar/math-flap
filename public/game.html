@@ -11,7 +11,7 @@
     :root {
       color-scheme: dark;
       --ink: #071a3d;
-      --sky: #49c8ff;
+      --sky: #102c52;
       --blue: #1477ff;
       --yellow: #ffd44d;
       --cream: #fff9e7;
@@ -73,15 +73,15 @@
     }
 
     .brand {
-      color: var(--ink);
+      color: var(--cream);
       font-size: clamp(1.05rem, 3.6vw, 1.4rem);
       font-weight: 1000;
       letter-spacing: -.05em;
       text-transform: uppercase;
-      text-shadow: 0 2px rgba(255,255,255,.32);
+      text-shadow: 0 2px rgba(7,26,61,.5);
     }
 
-    .brand span { color: var(--cream); }
+    .brand span { color: var(--yellow); }
 
     .stats {
       display: flex;
@@ -385,24 +385,6 @@
     .play-button:active { transform: translateY(5px); box-shadow: 0 1px 0 var(--ink); }
     .play-button:focus-visible, .icon-button:focus-visible { outline: 4px solid var(--blue); outline-offset: 3px; }
 
-    .hint {
-      position: absolute;
-      z-index: 3;
-      left: 50%;
-      bottom: max(14px, env(safe-area-inset-bottom));
-      transform: translateX(-50%);
-      width: max-content;
-      max-width: calc(100% - 28px);
-      padding: 8px 14px;
-      border-radius: 999px;
-      background: rgba(7,26,61,.78);
-      color: white;
-      font-size: clamp(.75rem, 2.8vw, .9rem);
-      font-weight: 800;
-      text-align: center;
-      pointer-events: none;
-    }
-
     .sr-only {
       position: absolute;
       width: 1px;
@@ -419,7 +401,6 @@
       body { padding: 6px; }
       .shell { height: calc(100dvh - 12px); min-height: 0; border-radius: 18px; }
       .equation { top: 65px; padding-block: 6px 8px; }
-      .hint { bottom: 8px; }
       .card { padding: 20px 26px; }
       .mascot { font-size: 3.2rem; }
       h1 { font-size: 2.5rem; }
@@ -455,7 +436,6 @@
     </header>
 
     <div class="equation" id="equation" aria-live="polite">1 + 2 = ?</div>
-    <div class="hint" id="hint">Tap, click, or press Space to flap</div>
 
     <section class="overlay" id="startOverlay">
       <div class="card">
@@ -503,7 +483,6 @@
       const shell = document.getElementById('gameShell');
       const scoreEl = document.getElementById('score');
       const equationEl = document.getElementById('equation');
-      const hintEl = document.getElementById('hint');
       const startOverlay = document.getElementById('startOverlay');
       const gameOverOverlay = document.getElementById('gameOverOverlay');
       const startButton = document.getElementById('startButton');
@@ -519,8 +498,8 @@
       const leaderboardReset = document.getElementById('leaderboardReset');
 
       const COLORS = {
-        ink: '#071a3d', skyTop: '#4fd2ff', skyBottom: '#148cff',
-        pipe: '#125cff', pipeLight: '#4c9bff', yellow: '#ffd44d',
+        ink: '#071a3d', skyTop: '#0b1935', skyBottom: '#1b527c',
+        yellow: '#ffd44d',
         cream: '#fff9e7', white: '#ffffff', red: '#ff4f64', green: '#20d39a'
       };
 
@@ -670,7 +649,6 @@
         state = 'playing';
         startOverlay.hidden = true;
         gameOverOverlay.hidden = true;
-        hintEl.textContent = 'Choose the correct answer';
         lastTime = performance.now();
         flap();
       }
@@ -924,23 +902,100 @@
       function drawBackground() {
         const gradient = ctx.createLinearGradient(0, 0, 0, H);
         gradient.addColorStop(0, COLORS.skyTop);
+        gradient.addColorStop(0.58, '#123b67');
         gradient.addColorStop(1, COLORS.skyBottom);
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, W, H);
 
-        ctx.globalAlpha = 0.16;
-        ctx.fillStyle = COLORS.white;
-        const drift = (performance.now() * 0.012) % 90;
-        for (let row = 0; row < 7; row++) {
-          for (let col = -1; col < 8; col++) {
-            const x = col * 90 + (row % 2) * 45 - drift;
-            const y = 160 + row * 95;
+        const stars = [
+          [.09,.14], [.24,.2], [.42,.08], [.7,.16], [.89,.11],
+          [.14,.32], [.35,.39], [.61,.29], [.83,.36], [.95,.27],
+          [.06,.53], [.3,.59], [.55,.48], [.76,.57], [.92,.64],
+          [.18,.71], [.47,.68], [.68,.76], [.88,.73]
+        ];
+        ctx.fillStyle = 'rgba(255,231,168,.68)';
+        for (let i = 0; i < stars.length; i++) {
+          const [sx, sy] = stars[i];
+          ctx.beginPath();
+          ctx.arc(sx * W, sy * H, i % 5 === 0 ? 1.5 : 1, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.fillStyle = 'rgba(143,186,218,.08)';
+        for (const [side, level] of [[0,.34], [1,.5], [0,.67], [1,.78]]) {
+          const edge = side * W;
+          for (let i = 0; i < 3; i++) {
             ctx.beginPath();
-            ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+            ctx.ellipse(edge + (side ? -1 : 1) * i * W * .065,
+              H * level + i * H * .012, W * .11, H * .025, 0, 0, Math.PI * 2);
             ctx.fill();
           }
         }
-        ctx.globalAlpha = 1;
+
+        const buildingWidths = [1.0,.72,1.18,.84,1.1,.76,.98,.82,1.16,.7,1.04,.9];
+        for (let layer = 0; layer < 2; layer++) {
+          const unit = W / 11;
+          const heights = layer === 0
+            ? [.13,.1,.17,.12,.15,.09,.14,.18,.11,.16,.12,.14]
+            : [.08,.12,.1,.15,.09,.13,.11,.08,.14,.1,.12,.09];
+          ctx.fillStyle = layer === 0 ? '#173f68' : '#102e50';
+          for (let i = 0; i < heights.length; i++) {
+            const x = i * unit - unit * .2 + (layer ? unit * .42 : 0);
+            const width = unit * buildingWidths[i];
+            const top = H * (1 - heights[i]);
+            ctx.fillRect(x, top, width, H - top);
+            if (layer === 1 && (i === 2 || i === 8)) {
+              ctx.fillRect(x + width * .5, top - H * .018, 2, H * .018);
+            }
+            if (i % 3 !== 0) {
+              ctx.fillStyle = 'rgba(247,193,105,.37)';
+              ctx.fillRect(x + width * .3, top + H * .025, Math.max(2, W * .005), Math.max(3, H * .008));
+              if (i % 4 === 1) {
+                ctx.fillRect(x + width * .65, top + H * .055, Math.max(2, W * .005), Math.max(3, H * .008));
+              }
+              ctx.fillStyle = layer === 0 ? '#173f68' : '#102e50';
+            }
+          }
+        }
+      }
+
+      function drawBookStack(x, y, w, h) {
+        if (h <= 0) return;
+        const count = Math.max(2, Math.min(4, Math.round(h / 62)));
+        const bookHeight = h / count;
+        const covers = ['#226779', '#56426f', '#a45b45', '#305a70'];
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(x, y, w, h);
+        ctx.clip();
+        for (let i = 0; i < count; i++) {
+          const by = y + i * bookHeight + 1;
+          const bh = bookHeight - 2;
+          roundedRect(x + 1, by, w - 2, bh, Math.min(10, bh * .2));
+          ctx.fillStyle = covers[i % covers.length];
+          ctx.fill();
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = COLORS.ink;
+          ctx.stroke();
+
+          roundedRect(x + 18, by + 5, w - 25, Math.max(2, bh * .24), 5);
+          ctx.fillStyle = 'rgba(255,255,255,.1)';
+          ctx.fill();
+          ctx.fillStyle = 'rgba(255,210,126,.75)';
+          ctx.fillRect(x + 10, by + 8, 3, Math.max(0, bh - 16));
+          if (i === 2 && bh > 32) {
+            ctx.beginPath();
+            ctx.moveTo(x + w * .62, by + bh * .32);
+            ctx.lineTo(x + w * .7, by + bh * .5);
+            ctx.lineTo(x + w * .62, by + bh * .68);
+            ctx.lineTo(x + w * .54, by + bh * .5);
+            ctx.closePath();
+            ctx.strokeStyle = 'rgba(255,210,126,.75)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          }
+        }
+        ctx.restore();
       }
 
       function drawGate() {
@@ -953,17 +1008,7 @@
         const segments = [[0, t1], [b1, t2 - b1], [b2, H - b2]];
 
         for (const [y, h] of segments) {
-          if (h <= 0) continue;
-          roundedRect(x, y - 5, w, h + 10, 13);
-          ctx.fillStyle = COLORS.pipe;
-          ctx.fill();
-          ctx.lineWidth = 4;
-          ctx.strokeStyle = COLORS.ink;
-          ctx.stroke();
-
-          ctx.fillStyle = COLORS.pipeLight;
-          roundedRect(x + 9, y + 6, Math.max(8, w * 0.16), Math.max(0, h - 12), 5);
-          ctx.fill();
+          drawBookStack(x, y, w, h);
         }
 
         drawAnswer(gate.topAnswer, gate.topCenter, gate.question?.answer === gate.topAnswer && successText > 0);
