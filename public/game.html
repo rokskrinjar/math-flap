@@ -518,6 +518,7 @@
       let screenFlash = 0;
       let successText = 0;
       let wingFlapStartedAt = -Infinity;
+      let sceneryDistance = 0;
       let particles = [];
       let playerNickname = '';
       let playerReady = null;
@@ -634,6 +635,7 @@
         bird.y = H * 0.53;
         bird.vy = 0;
         wingFlapStartedAt = -Infinity;
+        sceneryDistance = 0;
         particles = [];
         screenFlash = 0;
         successText = 0;
@@ -858,6 +860,7 @@
 
         const speed = Math.min(245, 145 + score * 4.2);
         gate.x -= speed * dt;
+        sceneryDistance += speed * dt;
 
         if (bird.y - bird.radius < 0 || bird.y + bird.radius > H) {
           endGame('pipe');
@@ -938,19 +941,22 @@
           const heights = layer === 0
             ? [.13,.1,.17,.12,.15,.09,.14,.18,.11,.16,.12,.14]
             : [.08,.12,.1,.15,.09,.13,.11,.08,.14,.1,.12,.09];
+          const offset = (sceneryDistance * (layer === 0 ? .12 : .22)) % (heights.length * unit);
           ctx.fillStyle = layer === 0 ? '#173f68' : '#102e50';
-          for (let i = 0; i < heights.length; i++) {
-            const x = i * unit - unit * .2 + (layer ? unit * .42 : 0);
-            const width = unit * buildingWidths[i];
-            const top = H * (1 - heights[i]);
+          for (let i = -heights.length; i < heights.length * 2; i++) {
+            const index = (i + heights.length) % heights.length;
+            const x = i * unit - unit * .2 + (layer ? unit * .42 : 0) - offset;
+            if (x > W || x + unit * buildingWidths[index] < 0) continue;
+            const width = unit * buildingWidths[index];
+            const top = H * (1 - heights[index]);
             ctx.fillRect(x, top, width, H - top);
-            if (layer === 1 && (i === 2 || i === 8)) {
+            if (layer === 1 && (index === 2 || index === 8)) {
               ctx.fillRect(x + width * .5, top - H * .018, 2, H * .018);
             }
-            if (i % 3 !== 0) {
+            if (index % 3 !== 0) {
               ctx.fillStyle = 'rgba(247,193,105,.37)';
               ctx.fillRect(x + width * .3, top + H * .025, Math.max(2, W * .005), Math.max(3, H * .008));
-              if (i % 4 === 1) {
+              if (index % 4 === 1) {
                 ctx.fillRect(x + width * .65, top + H * .055, Math.max(2, W * .005), Math.max(3, H * .008));
               }
               ctx.fillStyle = layer === 0 ? '#173f68' : '#102e50';
